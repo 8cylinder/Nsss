@@ -1,0 +1,141 @@
+
+#+title: NSSSsss...
+
+
+- TOML Kit 0.13.0 :: https://tomlkit.readthedocs.io/en/latest/quickstart/
+- Dynaconf :: https://www.dynaconf.com/
+
+
+* Dependences
+1. +tomlkit+
+2. platformdirs..?
+   https://github.com/tox-dev/platformdirs
+
+* Python
+
+#+begin_src python
+  from nsss import Nsss
+  __version__ = 1.0.0
+  __file__ = "/home/sm/bin/script.py"
+  platform = 'mac' if is_mac else 'linux'
+  platform_version = f'{platform}.{__version__}'
+  try:
+      # script.py.json
+      config = Nsss(__file__)
+      # script.py-2.0.json
+      config = Nsss(__file__, version="2.0", location='~/home/config-dir/')
+      # custom-name-1.0.0.json
+      config = Nsss("custom-name", version=__version__, location='~/home/config-dir/')
+      # script.py-linux.1.0.0.json
+      config = Nsss(__file__, version=platform_version)
+  except FileNotFoundError:
+      print('NSSS config file not found')
+  except VersionNotFoundError as e:
+      print(f'NSSS config file with version {e.version} not found')
+      existing_versions = ', '.join(e.versions)
+      print(f'Existing versions are {existing_versions}')
+
+  try:
+      name: str = config.name
+  except AttributeError:
+      print('Field not initialized')
+
+  name: str = config.__dict__['name']
+  name = config.__dict__.get('name', 'betty')
+  name = config.get('name', 'betty')
+
+#+end_src
+
+=init(args, ...) -> DataClass= - Read that data from the specified script
+name. Meant for the =__file__= variable.  The filename uses this
+pattern:
+: f"{__file__}.toml"
+: f"{__file__}-{version}.toml"
+
+- +auto :: if no file, create a blank one or raise error+
+- +auto_field :: if not in file create it or raise error+
+- version=x.x.x :: load values from a file with that version in it's name,
+  ie: =script-2.1.14.toml= otherwise use, =script.toml=
+- location :: if specified, create/read settings files in this dir.
+  Otherwise search the default locations, .config/nsss, $HOME
+
+
+** Create dynamic dataclasses
+#+begin_src python
+  from dataclasses import dataclass, make_dataclass
+
+  def create_dataclass_dynamically(class_name, fields):
+      """Creates a dataclass dynamically based on the provided fields.
+
+      https://docs.python.org/3/library/dataclasses.html#dataclasses.make_dataclass"""
+      return make_dataclass(class_name, fields)
+
+  # Example usage:
+  fields = [('name', str), ('age', int)]
+  Person = create_dataclass_dynamically('Person', fields)
+
+  person = Person('Alice', 30)
+  print(person)
+#+end_src
+
+** Data structure
+#+begin_src json
+{
+  'meta': {
+    'script_name': 'some-application',
+    'version': 1.0.0,
+    'last_modified': 'XXXX-XX-XXTXX:XX',
+    'history': [
+      ['first_name', 'create', 'XXXX-XX-XXTXX:XX', 'Judy'],
+      ['address', 'create', 'XXXX-XX-XXTXX:XX', '1234 Main'],
+      ['first_name', 'change', 'XXXX-XX-XXTXX:XX', 'Judy', 'Fred'],
+      ['first_name', 'change', 'XXXX-XX-XXTXX:XX', 'Fred', 'Sandy'],
+      ['address', 'delete', 'XXXX-XX-XXTXX:XX']
+    ]
+  },
+  'variables':{
+    'first_name':{
+      'type':'str',
+      'value': 'Sandy'
+    },
+    'date_sent':{
+      'type':'datetime',
+      'value': 'XXXX-XX-XXTXX:XX'
+    }
+  }
+}
+#+end_src
+
+
+* Bash
+
+nsss [options] [get|set|init]
+
+nsss init [--dir=DIR] SCRIPT-NAME
+  Create a blank settings file in the specified dir or in the default location
+  DIR          The directory to store the file
+
+nsss get [--version=] SCRIPT-NAME FIELD
+  SCRIPT-NAME  The name of the script to to get the fields from
+  FIELD        The field name
+
+nsss getall [SCRIPT-NAME]
+  Get all the fields and values from SCRIPT-NAME or all scripts
+
+nsss set  (modify or create)
+  SCRIPT-NAME  The name of the script to to get the fields from
+  FIELD        The field name
+  VALUE        The field value
+  TYPE         Field type; int, str, ...
+
+nsss info
+  list all script settings files
+
+#+begin_src bash
+
+  nsss get script-name field
+  nsss get script-name --all
+  nsss set script-name field value
+  nsss init script-name
+
+#+end_src
