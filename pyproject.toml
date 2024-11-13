@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "nsss"
 version = "0.1.0"
-description = ""
+description = "Not so simple settings"
 authors = ["Sheldon McGrandle <developer@8cylinder.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.12"
 click = "^8.1.7"
 platformdirs = "^4.3.6"
 

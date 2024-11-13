@@ -14,7 +14,7 @@
 * Python
 
 #+begin_src python
-  from nsss import Nsss
+  from nsss import nsss
   __version__ = 1.0.0
   __file__ = "/home/sm/bin/script.py"
   platform = 'mac' if is_mac else 'linux'
